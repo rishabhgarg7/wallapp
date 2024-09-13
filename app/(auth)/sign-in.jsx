@@ -19,21 +19,40 @@ import CustomButton from "../../components/CustomButton";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { setUser, setIsLoggedIn } = useGlobalContext();
+  const { setUser, setIsLoggedIn, user, isLoggedIn, isLoading, setIsLoading } =
+    useGlobalContext();
+
+  console.log(
+    "user and isLoggedIn in sign-in screen",
+    user,
+    isLoggedIn,
+    isLoading
+  );
 
   const handleLogin = async () => {
     try {
+      setIsLoading(true);
       const userCredentials = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
       const user = userCredentials.user;
-      setUser(user);
+      const userData = {
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+        emailVerified: user.emailVerified,
+        phoneNumber: user.phoneNumber,
+        uid: user.uid,
+      };
+      setUser(userData);
       setIsLoggedIn(true);
-      router.replace("/home");
+      setIsLoading(false);
       console.log("Logged in successfully");
+      router.replace("/home");
     } catch (error) {
+      setIsLoading(false);
       console.error("Error logging in:", error.message);
     }
   };

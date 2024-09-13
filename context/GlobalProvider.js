@@ -1,6 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
-// import { getCurrentUser } from "../lib/appwrite";
-
+import { auth } from "../lib/firebase";
 const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
@@ -9,22 +8,23 @@ export const GlobalProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // getCurrentUser()
-    //   .then((res) => {
-    //     if (res) {
-    //       setUser(user);
-    //       setIsLoggedIn(true);
-    //     } else {
-    //       setIsLoggedIn(false);
-    //       setUser(null);
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   })
-    //   .finally(() => {
-    //     setIsLoading(false);
-    //   });
+    console.log("user state change checking: useeffect ");
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const userDoc = {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName,
+          photoURL: user.photoURL,
+        };
+        setUser(userDoc);
+        setIsLoggedIn(true);
+      } else {
+        console.log("user is not logged in");
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    });
   }, []);
 
   return (

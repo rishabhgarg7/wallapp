@@ -1,71 +1,128 @@
+import { View, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { Redirect, router } from "expo-router";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  Image,
-} from "react-native";
-
-import React from "react";
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { signOut } from "firebase/auth";
 
+import AddPostInput from "../components/AddPostInput";
+import MessagesList from "../components/MessagesList";
+import { auth, db } from "../lib/firebase";
 import { useGlobalContext } from "../context/GlobalProvider";
 
-const MessageItem = ({ name, message, time }) => (
-  <View className="flex-row items-center mb-4">
-    {/* <Image
-      source={require("../assets/default-avatar.png")}
-      className="w-10 h-10 rounded-full mr-3"
-    /> */}
-    <View className="flex-1">
-      <View className="flex-row justify-between">
-        <Text className="font-bold">{name}</Text>
-        <Text className="text-gray-500">{time}</Text>
-      </View>
-      <Text>{message}</Text>
-    </View>
-  </View>
-);
-
 const Home = () => {
-  const { user } = useGlobalContext();
-  console.log("user in home", user);
-  const messages = [
-    { id: "1", name: "Henry", message: "Message 1", time: "8:22pm" },
-    { id: "2", name: "Zach", message: "Message 2", time: "8:21pm" },
-    { id: "3", name: "Zach", message: "Message 3", time: "8:20pm" },
-    { id: "4", name: "Henry", message: "Message 4", time: "8:19pm" },
-  ];
+  const { user, isLoading, isLoggedIn, setIsLoggedIn, setUser } =
+    useGlobalContext();
+  const [posts, setPosts] = useState([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchPosts = useCallback(() => {
+    setIsLoadingPosts(true);
+    setError(null);
+
+    const postsQuery = query(
+      collection(db, "posts"),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      postsQuery,
+      async (snapshot) => {
+        try {
+          const fetchedPosts = await Promise.all(
+            snapshot.docs.map(async (postDoc) => {
+              const postData = postDoc.data();
+              const userDoc = await getDoc(doc(db, "users", postData.userId));
+              const userData = userDoc.data();
+
+              return {
+                id: postDoc.id,
+                ...postData,
+                userName: userData?.name || "Anonymous User",
+                userPhotoURL: userData?.photoURL || null,
+                timestamp: postData.timestamp
+                  ?.toDate()
+                  .toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })
+                  .toLowerCase()
+                  .replace(" ", ""),
+              };
+            })
+          );
+          setPosts(fetchedPosts);
+          setIsLoadingPosts(false);
+        } catch (err) {
+          console.error("Error processing posts: ", err);
+          setError("Failed to process posts. Please try again.");
+          setIsLoadingPosts(false);
+        }
+      },
+      (err) => {
+        console.error("Error fetching posts: ", err);
+        setError("Failed to fetch posts. Please try again.");
+        setIsLoadingPosts(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = fetchPosts();
+    return () => unsubscribe();
+  }, [fetchPosts]);
+
+  if (!isLoading && (!user || !isLoggedIn)) {
+    return <Redirect href="/" />;
+  }
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    setIsLoggedIn(false);
+    setUser(null);
+    router.push("/");
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
-        <Text className="text-blue-500 font-semibold">Log Out</Text>
+        <TouchableOpacity onPress={handleSignOut}>
+          <Text className="text-blue-500 font-semibold">Log Out</Text>
+        </TouchableOpacity>
         <Text className="text-xl font-bold">Wall</Text>
         <Text className="text-xl text-white font-bold">Wall</Text>
       </View>
 
-      <View className="p-2 border-b border-gray-300 ">
-        <TextInput className="p-2 mb-2" placeholder="Write something here..." />
-        <TouchableOpacity className="bg-[#00A3FF] rounded-md w-32 py-2 items-center">
-          <Text className="text-white font-semibold">Add to the wall</Text>
-        </TouchableOpacity>
-      </View>
+      <AddPostInput />
 
-      <FlatList
-        className="px-4 mt-4"
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <MessageItem
-            name={item.name}
-            message={item.message}
-            time={item.time}
-          />
-        )}
-        contentContainerClassName="p-4"
-      />
+      {isLoadingPosts ? (
+        <View className="flex-1 justify-center items-center">
+          <Text>Loading posts...</Text>
+        </View>
+      ) : error ? (
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-red-500 mb-4">{error}</Text>
+          <TouchableOpacity
+            onPress={fetchPosts}
+            className="bg-blue-500 px-4 py-2 rounded-md"
+          >
+            <Text className="text-white font-semibold">Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <MessagesList messages={posts} />
+      )}
     </SafeAreaView>
   );
 };

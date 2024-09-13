@@ -14,14 +14,20 @@ import { images } from "../constants";
 import CustomButton from "../components/CustomButton";
 
 export default function App() {
-  const { isLoading, isLoggedIn } = useGlobalContext();
+  const { isLoading, isLoggedIn, user } = useGlobalContext();
 
-  if (!isLoading && isLoggedIn) {
+  console.log(
+    "user and isLoggedIn in index splash screen",
+    user,
+    isLoggedIn,
+    isLoading
+  );
+  if (!isLoading && isLoggedIn && user) {
     return <Redirect href="/home" />;
   }
   const handleContinue = () => {
-    // router.push("/sign-in");
-    router.push("/home");
+    router.push("/sign-in");
+    // router.push("/home");
   };
 
   return (

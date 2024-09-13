@@ -3,33 +3,33 @@ import { View, Text, TextInput, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Link, router } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "../../lib/firebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { images } from "../../constants";
 import CustomButton from "../../components/CustomButton";
 
 export default function SignUpScreen() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [errors, setErrors] = useState({});
   const { setUser, setIsLoggedIn } = useGlobalContext();
 
-  const validatePassword = (value) => {
-    setPassword(value);
-    if (value.length < 6) {
-      setPasswordError("Password must be at least 6 characters long");
-    } else {
-      setPasswordError("");
-    }
+  const validateForm = () => {
+    const newErrors = {};
+    if (!name.trim()) newErrors.name = "Name is required";
+    if (!email.trim()) newErrors.email = "Email is required";
+    if (password.length < 6)
+      newErrors.password = "Password must be at least 6 characters long";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const createUser = async () => {
-    if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters long");
-      return;
-    }
-    console.log("Creating user with email:", email, "and password:", password);
+    if (!validateForm()) return;
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -37,17 +37,31 @@ export default function SignUpScreen() {
         password
       );
       const user = userCredential.user;
-      setUser(user);
+
+      await updateProfile(user, { displayName: name });
+
+      const userDoc = {
+        uid: user.uid,
+        email: user.email,
+        name: name,
+        photoURL: user.photoURL,
+        createdAt: serverTimestamp(),
+      };
+
+      await setDoc(doc(db, "users", user.uid), userDoc);
+
+      setUser(userDoc);
       setIsLoggedIn(true);
       router.replace("/home");
     } catch (error) {
       console.error("Error signing up:", error.message);
+      setErrors({ submit: error.message });
     }
   };
 
   return (
     <SafeAreaView className="h-full bg-primary">
-      <ScrollView contentContainerStyle={{ height: "100%" }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View className="items-center justify-center w-full h-full px-4">
           <Image
             source={images.logo}
@@ -60,7 +74,18 @@ export default function SignUpScreen() {
               Signup for <Text className="text-secondary-200">Wall</Text>
             </Text>
             <TextInput
-              className="w-full h-12 bg-white/10 rounded-lg px-4 mb-4 text-white"
+              className="w-full h-12 bg-white/10 rounded-lg px-4 mb-1 text-white"
+              placeholder="Name"
+              placeholderTextColor="#9CA3AF"
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+            {errors.name && (
+              <Text className="text-red-500 mb-2 text-sm">{errors.name}</Text>
+            )}
+            <TextInput
+              className="w-full h-12 bg-white/10 rounded-lg px-4 mb-1 text-white"
               placeholder="Email"
               placeholderTextColor="#9CA3AF"
               value={email}
@@ -68,22 +93,28 @@ export default function SignUpScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {errors.email && (
+              <Text className="text-red-500 mb-2 text-sm">{errors.email}</Text>
+            )}
             <TextInput
               className="w-full h-12 bg-white/10 rounded-lg px-4 mb-1 text-white"
               placeholder="Password"
               placeholderTextColor="#9CA3AF"
               value={password}
-              onChangeText={validatePassword}
+              onChangeText={setPassword}
               secureTextEntry
             />
-            {passwordError ? (
-              <Text className="text-red-500 mb-4 text-sm">{passwordError}</Text>
-            ) : (
-              <View className="mb-4" />
+            {errors.password && (
+              <Text className="text-red-500 mb-2 text-sm">
+                {errors.password}
+              </Text>
+            )}
+            {errors.submit && (
+              <Text className="text-red-500 mb-2 text-sm">{errors.submit}</Text>
             )}
             <CustomButton
               title="Sign Up"
-              containerStyles="mb-4"
+              containerStyles="mt-4 mb-4"
               handlePress={createUser}
             />
             <View className="flex flex-row justify-center">
