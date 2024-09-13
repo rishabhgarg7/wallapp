@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { Link, router } from "expo-router";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { LinearGradient } from "expo-linear-gradient";
 import { auth, db } from "../../lib/firebase";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { images } from "../../constants";
@@ -60,73 +61,87 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView className="h-full bg-primary">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="items-center justify-center w-full h-full px-4">
-          <Image
-            source={images.logo}
-            className="w-[130px] h-[84px]"
-            resizeMode="contain"
-          />
+    <LinearGradient colors={["#000033", "#000000"]} className="h-full">
+      <SafeAreaView className="h-full">
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View className="items-center justify-center w-full h-full px-4">
+            <Image
+              source={images.logo}
+              className="w-[130px] h-[84px]"
+              resizeMode="contain"
+            />
 
-          <View className="w-full mt-10">
-            <Text className="text-3xl font-bold text-center text-white mb-6">
-              Signup for <Text className="text-secondary-200">Wall</Text>
-            </Text>
-            <TextInput
-              className="w-full h-12 bg-white/10 rounded-lg px-4 mb-1 text-white"
-              placeholder="Name"
-              placeholderTextColor="#9CA3AF"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-            />
-            {errors.name && (
-              <Text className="text-red-500 mb-2 text-sm">{errors.name}</Text>
-            )}
-            <TextInput
-              className="w-full h-12 bg-white/10 rounded-lg px-4 mb-1 text-white"
-              placeholder="Email"
-              placeholderTextColor="#9CA3AF"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            {errors.email && (
-              <Text className="text-red-500 mb-2 text-sm">{errors.email}</Text>
-            )}
-            <TextInput
-              className="w-full h-12 bg-white/10 rounded-lg px-4 mb-1 text-white"
-              placeholder="Password"
-              placeholderTextColor="#9CA3AF"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-            {errors.password && (
-              <Text className="text-red-500 mb-2 text-sm">
-                {errors.password}
+            <View className="w-full mt-10">
+              <Text className="text-3xl font-bold text-center text-white mb-6">
+                Signup for <Text className="text-secondary-200">Wall</Text>
               </Text>
-            )}
-            {errors.submit && (
-              <Text className="text-red-500 mb-2 text-sm">{errors.submit}</Text>
-            )}
-            <CustomButton
-              title="Sign Up"
-              containerStyles="mt-4 mb-4"
-              handlePress={createUser}
-            />
-            <View className="flex flex-row justify-center">
-              <Text className="text-white">Already have an account? </Text>
-              <Link href="/sign-in" className="text-secondary-200">
-                Sign in
-              </Link>
+              <View className="mb-4">
+                <TextInput
+                  className="w-full h-12 bg-white/10 rounded-lg px-4 text-white"
+                  placeholder="Name"
+                  placeholderTextColor="#9CA3AF"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+                {errors.name && (
+                  <Text className="text-red-500 mt-1 text-sm">
+                    {errors.name}
+                  </Text>
+                )}
+              </View>
+              <View className="mb-4">
+                <TextInput
+                  className="w-full h-12 bg-white/10 rounded-lg px-4 text-white"
+                  placeholder="Email"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                {errors.email && (
+                  <Text className="text-red-500 mt-1 text-sm">
+                    {errors.email}
+                  </Text>
+                )}
+              </View>
+              <View className="mb-4">
+                <TextInput
+                  className="w-full h-12 bg-white/10 rounded-lg px-4 text-white"
+                  placeholder="Password"
+                  placeholderTextColor="#9CA3AF"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+                {errors.password && (
+                  <Text className="text-red-500 mt-1 text-sm">
+                    {errors.password}
+                  </Text>
+                )}
+              </View>
+              {errors.submit && (
+                <Text className="text-red-500 mb-2 text-sm">
+                  {errors.submit}
+                </Text>
+              )}
+              <CustomButton
+                title="Sign Up"
+                containerStyles="mt-4 mb-4"
+                handlePress={createUser}
+              />
+              <View className="flex flex-row justify-center">
+                <Text className="text-white">Already have an account? </Text>
+                <Link href="/sign-in" className="text-secondary-200">
+                  Sign in
+                </Link>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-      <StatusBar style="light" />
-    </SafeAreaView>
+        </ScrollView>
+        <StatusBar style="light" />
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
-import { Stack, SplashScreen } from "expo-router";
+import { Stack, SplashScreen, Slot } from "expo-router";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { GlobalProvider } from "../context/GlobalProvider";
+import { useGlobalContext, GlobalProvider } from "../context/GlobalProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,7 +36,7 @@ const RootLayout = () => {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="home" />
+        <Stack.Screen name="(app)" />
       </Stack>
     </GlobalProvider>
   );

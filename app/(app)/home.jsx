@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
-import { Redirect, router } from "expo-router";
+import { Link, Redirect, router } from "expo-router";
 import {
   collection,
   query,
@@ -11,11 +11,12 @@ import {
 } from "firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { signOut } from "firebase/auth";
+import { useNavigation } from "expo-router";
 
-import AddPostInput from "../components/AddPostInput";
-import MessagesList from "../components/MessagesList";
-import { auth, db } from "../lib/firebase";
-import { useGlobalContext } from "../context/GlobalProvider";
+import AddPostInput from "../../components/AddPostInput";
+import MessagesList from "../../components/MessagesList";
+import { auth, db } from "../../lib/firebase";
+import { useGlobalContext } from "../../context/GlobalProvider";
 
 const Home = () => {
   const { user, isLoading, isLoggedIn, setIsLoggedIn, setUser } =
@@ -23,6 +24,7 @@ const Home = () => {
   const [posts, setPosts] = useState([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [error, setError] = useState(null);
+  const navigation = useNavigation();
 
   const fetchPosts = useCallback(() => {
     setIsLoadingPosts(true);
@@ -83,6 +85,18 @@ const Home = () => {
     return () => unsubscribe();
   }, [fetchPosts]);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", (e) => {
+      if (
+        e.data?.state?.routes?.[e.data.state.routes.length - 1]?.params?.refresh
+      ) {
+        fetchPosts();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, fetchPosts]);
+
   if (!isLoading && (!user || !isLoggedIn)) {
     return <Redirect href="/" />;
   }
@@ -98,10 +112,13 @@ const Home = () => {
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
         <TouchableOpacity onPress={handleSignOut}>
-          <Text className="text-blue-500 font-semibold">Log Out</Text>
+          <Text className="text-[#00A3FF] font-semibold">Log Out</Text>
         </TouchableOpacity>
         <Text className="text-xl font-bold">Wall</Text>
-        <Text className="text-xl text-white font-bold">Wall</Text>
+
+        <Link href="/profile">
+          <Text className="text-xl  font-semibold">Profile</Text>
+        </Link>
       </View>
 
       <AddPostInput />
