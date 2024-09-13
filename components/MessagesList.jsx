@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, FlatList, Image } from "react-native";
 
 const MessageItem = ({ item }) => (
-  <View className="flex-row items-center py-2 px-4">
+  <View className="flex-row items-center px-4 my-3">
     {item.userPhotoURL ? (
       <Image
         source={{ uri: item.userPhotoURL }}
@@ -17,9 +17,11 @@ const MessageItem = ({ item }) => (
     <View className="flex-1">
       <View className="flex-row justify-between items-center">
         <Text className="font-bold text-lg">{item.userName}</Text>
-        <Text className="text-gray-500 text-sm">{item.timestamp}</Text>
+        <Text className="text-gray-500 text-sm font-normal">
+          {item.timestamp}
+        </Text>
       </View>
-      <Text className="text-gray-600">{item.content}</Text>
+      <Text className="text-gray-600 font-normal">{item.content}</Text>
     </View>
   </View>
 );
