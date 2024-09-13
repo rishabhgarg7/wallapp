@@ -21,7 +21,7 @@ const MessageItem = ({ item }) => (
           {item.timestamp}
         </Text>
       </View>
-      <Text className="text-gray-600 font-normal">{item.content}</Text>
+      <Text className="text-gray-600 font-normal ">{item.content}</Text>
     </View>
   </View>
 );
